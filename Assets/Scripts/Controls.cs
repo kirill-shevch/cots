@@ -1,8 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
+using Assets.Scripts;
 using UnityEngine;
 
-public class Control : MonoBehaviour
+public class Controls : MonoBehaviour
 {
     private float speed;
     private GameObject camera;
@@ -11,12 +10,13 @@ public class Control : MonoBehaviour
     void Start()
     {
         camera = GameObject.FindGameObjectsWithTag("MainCamera")[0];
+        World.Initialize();
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 
     private void FixedUpdate()
