@@ -6,8 +6,8 @@ namespace Assets.Scripts
 {
     public static class World
     {
-        public static int _maxX = 50;
-        public static int _maxY = 50;
+        public static int _maxX = 30;
+        public static int _maxY = 30;
         public static bool[,] grid;
         static World()
         {
@@ -23,16 +23,38 @@ namespace Assets.Scripts
 
         public static void Initialize()
         {
-            Build(1, 1, 0, 0);
-            Build(3, 4, 10, 10, true);
+            var user = Build(1, 1, 0, 0);
+            user.GetComponent<SpriteRenderer>().color = Color.blue;
+            user.AddComponent<Routing>();
+
+            for (int i = 0, fails = 0; i < 35;)
+            {
+                float xSize = UnityEngine.Random.Range(1, 7);
+                float ySize = UnityEngine.Random.Range(1, 7);
+                float xCord = UnityEngine.Random.Range(1, 30 - (int)xSize);
+                float yCord = UnityEngine.Random.Range(1, 30 - (int)ySize);
+                if (IsValid(xSize, ySize, xCord, yCord) && IsFreeSpace(xSize, ySize, xCord, yCord))
+                {
+                    Build(xSize, ySize, xCord, yCord, true);
+                    i++;
+                    fails = 0;
+                }
+                else
+                {
+                    fails++;
+                    if (fails > 5)
+                    {
+                        i++;
+                    }
+                }
+            }
+
+            //Build(7, 2, 3, 14, true);
+            //Build(3, 4, 10, 10, true);
         }
 
-        public static void Build(float xSize, float ySize, float xCord, float yCord, bool addToGrid = false)
+        public static GameObject Build(float xSize, float ySize, float xCord, float yCord, bool addToGrid = false)
         {
-            if (xSize < 0 || ySize < 0 || (xSize + xCord) >= _maxX || (ySize + yCord) >= _maxY)
-            {
-                return;
-            }
             GameObject go = new GameObject();
             go.name = Guid.NewGuid().ToString();
             go.transform.position = new Vector2(xCord + xSize / 2, yCord + ySize / 2);
@@ -49,9 +71,36 @@ namespace Assets.Scripts
                     }
                 }
             }
+            return go;
         }
 
-        public static List<(int x, int y)> FindShortestPath((int x, int y) start, (int x, int y) end)
+        public static bool IsValid(float xSize, float ySize, float xCord, float yCord)
+        {
+            return 
+                xSize > 0 && 
+                ySize > 0 && 
+                xCord > 0 &&
+                yCord > 0 &&
+                (xSize / 2 + xCord) <= _maxX && 
+                (ySize / 2 + yCord) <= _maxY;
+        }
+
+        public static bool IsFreeSpace(float xSize, float ySize, float xCord, float yCord)
+        {
+            for (int i = (int)xCord; i < xCord + xSize; i++)
+            {
+                for (int j = (int)yCord; j < yCord + ySize; j++)
+                {
+                    if (!grid[i, j])
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        public static Stack<(int x, int y)> FindShortestPath((int x, int y) start, (int x, int y) end)
         {
             int[] dx = { -1, -1, -1, 0, 0, 1, 1, 1 };
             int[] dy = { -1, 0, 1, -1, 1, -1, 0, 1 };
@@ -90,15 +139,15 @@ namespace Assets.Scripts
                     }
                 }
             }
-            List<(int x, int y)> path = new List<(int x, int y)>();
+            Stack<(int x, int y)> path = new Stack<(int x, int y)>();
             var node = end;
             while (node != start)
             {
-                path.Add(node);
+                path.Push(node);
                 node = parent[node.x, node.y];
             }
-            path.Add(start);
-            path.Reverse();
+            path.Push(start);
+            //path.Reverse();
             return path;
         }
     }
