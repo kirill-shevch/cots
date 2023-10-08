@@ -8,6 +8,7 @@ namespace Assets.Scripts
     {
         public static int _maxX = 30;
         public static int _maxY = 30;
+        public static int _builingPadding = 2;
         public static bool[,] grid;
         static World()
         {
@@ -27,10 +28,10 @@ namespace Assets.Scripts
             user.GetComponent<SpriteRenderer>().color = Color.blue;
             user.AddComponent<Routing>();
 
-            for (int i = 0, fails = 0; i < 35;)
+            for (int i = 0, fails = 0; i < 20;)
             {
-                float xSize = UnityEngine.Random.Range(1, 7);
-                float ySize = UnityEngine.Random.Range(1, 7);
+                float xSize = UnityEngine.Random.Range(3, 7);
+                float ySize = UnityEngine.Random.Range(3, 7);
                 float xCord = UnityEngine.Random.Range(1, 30 - (int)xSize);
                 float yCord = UnityEngine.Random.Range(1, 30 - (int)ySize);
                 if (IsValid(xSize, ySize, xCord, yCord) && IsFreeSpace(xSize, ySize, xCord, yCord))
@@ -48,9 +49,6 @@ namespace Assets.Scripts
                     }
                 }
             }
-
-            //Build(7, 2, 3, 14, true);
-            //Build(3, 4, 10, 10, true);
         }
 
         public static GameObject Build(float xSize, float ySize, float xCord, float yCord, bool addToGrid = false)
@@ -59,8 +57,10 @@ namespace Assets.Scripts
             go.name = Guid.NewGuid().ToString();
             go.transform.position = new Vector2(xCord + xSize / 2, yCord + ySize / 2);
             go.transform.localScale = new Vector2(xSize, ySize);
+            var rigidBody = go.AddComponent<Rigidbody2D>();
+            rigidBody.gravityScale = 0f;
             var sprite = go.AddComponent<SpriteRenderer>();
-            sprite.sprite = Resources.Load<Sprite>("Square");
+            sprite.sprite = addToGrid ? Resources.Load<Sprite>("9-Sliced") : Resources.Load<Sprite>("Circle");
             if (addToGrid)
             {
                 for (int i = (int)xCord; i < xCord + xSize; i++)
@@ -87,11 +87,11 @@ namespace Assets.Scripts
 
         public static bool IsFreeSpace(float xSize, float ySize, float xCord, float yCord)
         {
-            for (int i = (int)xCord; i < xCord + xSize; i++)
+            for (int i = (int)xCord - _builingPadding; i < xCord + xSize + _builingPadding; i++)
             {
-                for (int j = (int)yCord; j < yCord + ySize; j++)
+                for (int j = (int)yCord - _builingPadding; j < yCord + ySize + _builingPadding; j++)
                 {
-                    if (!grid[i, j])
+                    if (i < 0 || j < 0 || i >= _maxX || j >= _maxY || !grid[i, j])
                     {
                         return false;
                     }
