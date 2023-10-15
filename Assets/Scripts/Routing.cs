@@ -13,9 +13,15 @@ public class Routing : MonoBehaviour
     Vector2 nextStep;
     Vector2 velocity;
 
-    private Vector2 previousPosition;
-    private int counter = 0;
-    private float threshold = 0.01f;  
+    private bool isStacked = false;
+    private float timeStacked = 0f;
+    private float maxTimeStacked = 1.5f;
+
+    private bool isTransparent = false;
+    private float timeTransparent = 0f;
+    private float maxTimeTransparent = 1f;
+
+    private float speed = 1f;
 
     void Start()
     {
@@ -23,7 +29,6 @@ public class Routing : MonoBehaviour
         rb2D = GetComponent<Rigidbody2D>();
         GetTarget((int)(transform.position.x - 0.5f), (int)(transform.position.y - 0.5f));
         GetNextStep();
-        previousPosition = rb2D.position;
     }
 
     // Update is called once per frame
@@ -43,37 +48,61 @@ public class Routing : MonoBehaviour
             GetNextStep();
         }
 
-        Vector2 currentPosition = GetComponent<Rigidbody2D>().position;
-        if (Mathf.Abs(currentPosition.x - previousPosition.x) < threshold &&
-            Mathf.Abs(currentPosition.y - previousPosition.y) < threshold)
+        if (isStacked)
         {
-            counter++;
+            timeStacked += Time.deltaTime;
+            if (timeStacked >= maxTimeStacked)
+            {
+                EnableTransparent();
+            }
         }
-        else
+        else if (isTransparent)
         {
-            counter = 0;
+            timeTransparent += Time.deltaTime;
+            if (timeTransparent >= maxTimeTransparent)
+            {
+                DisableTransparent();
+            }
         }
-        if (counter > 50)
-        {
-            Debug.Log("Object has been stacked for some time.");
-            nextStep.x += Random.Range(-0.4f, +0.4f);
-            nextStep.y += Random.Range(-0.4f, +0.4f);
-        }
-        if (counter > 250)
-        {
-            Debug.Log("Object has been stacked for a long time.");
-            nextStep.x += Random.Range(-0.4f, +0.4f);
-            nextStep.y += Random.Range(-0.4f, +0.4f);
-        }
+
         velocity = GetVelocity(nextStep);
-        previousPosition = currentPosition;
         rb2D.MovePosition(rb2D.position + velocity * Time.fixedDeltaTime * 4);
+    }
+
+    private void OnCollisionEnter2D(Collision2D other)
+    {
+        if (other.gameObject.CompareTag(World._tag))
+        {
+            isStacked = true;
+        }
+    }
+
+    private void OnCollisionExit2D(Collision2D other)
+    {
+        if (other.gameObject.CompareTag(World._tag))
+        {
+            isStacked = false;
+        }
+    }
+
+    private void EnableTransparent()
+    {
+        isStacked = false;
+        isTransparent = true;
+        timeStacked = 0f;
+        GetComponent<Collider2D>().isTrigger = true;
+    }
+
+    private void DisableTransparent()
+    {
+        isTransparent = false;
+        GetComponent<Collider2D>().isTrigger = false;
+        timeTransparent = 0f;
     }
 
     private void GetNextStep()
     {
         nextPoint = path.Pop();
-        //Debug.Log($"Next point: x-{nextPoint.x} ; y-{nextPoint.y}");
         nextStep = new Vector2(nextPoint.x + 0.5f, nextPoint.y + 0.5f);
     }
 
@@ -82,7 +111,6 @@ public class Routing : MonoBehaviour
         Vector2 currentPosition = GetComponent<Rigidbody2D>().position;
         Vector2 direction = target - currentPosition;
         direction.Normalize();
-        float speed = 1f; // Change this value to adjust the speed of movement
         return direction * speed;
     }
 
@@ -102,7 +130,6 @@ public class Routing : MonoBehaviour
                 continue;
             }
             target = World.Build(1, 1, xCord, yCord, World._circleSprite);
-            //Debug.Log($"Target: x-{xCord} ; y-{yCord}");
             target.GetComponent<SpriteRenderer>().color = Color.yellow;
             path = World.FindShortestPath((currentX, currentY), (xCord, yCord));
         }

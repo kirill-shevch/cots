@@ -9,6 +9,7 @@ namespace Assets.Scripts
     {
         public static string _circleSprite = "Circle";
         public static string _nineSlicedSprite = "9-Sliced";
+        public static string _tag = "Unit";
 
         public static int _maxX = 30;
         public static int _maxY = 30;
@@ -32,41 +33,49 @@ namespace Assets.Scripts
             user1.GetComponent<SpriteRenderer>().color = Color.blue;
             user1.AddComponent<Routing>();
             user1.AddCollider<CircleCollider2D>();
+            user1.tag = _tag;
 
             var user2 = Build(1, 1, 1, 1, _circleSprite);
             user2.GetComponent<SpriteRenderer>().color = Color.blue;
             user2.AddComponent<Routing>();
             user2.AddCollider<CircleCollider2D>();
+            user2.tag = _tag;
 
             var user3 = Build(1, 1, 0, 1, _circleSprite);
             user3.GetComponent<SpriteRenderer>().color = Color.blue;
             user3.AddComponent<Routing>();
             user3.AddCollider<CircleCollider2D>();
+            user3.tag = _tag;
 
             var user4 = Build(1, 1, 1, 0, _circleSprite);
             user4.GetComponent<SpriteRenderer>().color = Color.blue;
             user4.AddComponent<Routing>();
             user4.AddCollider<CircleCollider2D>();
+            user4.tag = _tag;
 
             var user5 = Build(1, 1, 29, 29, _circleSprite);
             user5.GetComponent<SpriteRenderer>().color = Color.blue;
             user5.AddComponent<Routing>();
             user5.AddCollider<CircleCollider2D>();
+            user5.tag = _tag;
 
             var user6 = Build(1, 1, 28, 28, _circleSprite);
             user6.GetComponent<SpriteRenderer>().color = Color.blue;
             user6.AddComponent<Routing>();
             user6.AddCollider<CircleCollider2D>();
+            user6.tag = _tag;
 
             var user7 = Build(1, 1, 29, 28, _circleSprite);
             user7.GetComponent<SpriteRenderer>().color = Color.blue;
             user7.AddComponent<Routing>();
             user7.AddCollider<CircleCollider2D>();
+            user7.tag = _tag;
 
             var user8 = Build(1, 1, 28, 29, _circleSprite);
             user8.GetComponent<SpriteRenderer>().color = Color.blue;
             user8.AddComponent<Routing>();
             user8.AddCollider<CircleCollider2D>();
+            user8.tag = _tag;
 
             for (int i = 0, fails = 0; i < 20;)
             {
@@ -100,18 +109,9 @@ namespace Assets.Scripts
             go.transform.position = new Vector2(xCord + xSize / 2, yCord + ySize / 2);
             go.transform.localScale = new Vector2(xSize, ySize);
             var rigidBody = go.AddComponent<Rigidbody2D>();
-            //rigidBody.isKinematic = addToGrid ? true : false;
-            //if (addCollider)
-            //{
-            //    Collider2D boxCollider = addToGrid ? go.AddComponent<BoxCollider2D>() : go.AddComponent<CircleCollider2D>();
-            //    var material = new PhysicsMaterial2D();
-            //    material.friction = 0.0001f;
-            //    boxCollider.sharedMaterial = material;
-            //}
             rigidBody.gravityScale = 0f;
             var sprite = go.AddComponent<SpriteRenderer>();
             sprite.sprite = Resources.Load<Sprite>(spriteName);
-            //sprite.sprite = addToGrid ? Resources.Load<Sprite>("9-Sliced") : Resources.Load<Sprite>("Circle");
             return go;
         }
 
@@ -135,7 +135,7 @@ namespace Assets.Scripts
         {
             var collider = go.AddComponent<T>();
             var material = new PhysicsMaterial2D();
-            material.friction = 0.0001f;
+            material.friction = 0f;
             collider.sharedMaterial = material;
         }
 
