@@ -1,13 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SocialPlatforms.Impl;
 
 namespace Assets.Scripts
 {
     public static class World
     {
+        public static string _circleSprite = "Circle";
+        public static string _nineSlicedSprite = "9-Sliced";
+        public static string _tag = "Unit";
+
         public static int _maxX = 30;
         public static int _maxY = 30;
+        public static int _builingPadding = 2;
         public static bool[,] grid;
         static World()
         {
@@ -23,19 +29,65 @@ namespace Assets.Scripts
 
         public static void Initialize()
         {
-            var user = Build(1, 1, 0, 0);
-            user.GetComponent<SpriteRenderer>().color = Color.blue;
-            user.AddComponent<Routing>();
+            var user1 = Build(1, 1, 0, 0, _circleSprite);
+            user1.GetComponent<SpriteRenderer>().color = Color.blue;
+            user1.AddComponent<Routing>();
+            user1.AddCollider<CircleCollider2D>();
+            user1.tag = _tag;
 
-            for (int i = 0, fails = 0; i < 35;)
+            var user2 = Build(1, 1, 1, 1, _circleSprite);
+            user2.GetComponent<SpriteRenderer>().color = Color.blue;
+            user2.AddComponent<Routing>();
+            user2.AddCollider<CircleCollider2D>();
+            user2.tag = _tag;
+
+            var user3 = Build(1, 1, 0, 1, _circleSprite);
+            user3.GetComponent<SpriteRenderer>().color = Color.blue;
+            user3.AddComponent<Routing>();
+            user3.AddCollider<CircleCollider2D>();
+            user3.tag = _tag;
+
+            var user4 = Build(1, 1, 1, 0, _circleSprite);
+            user4.GetComponent<SpriteRenderer>().color = Color.blue;
+            user4.AddComponent<Routing>();
+            user4.AddCollider<CircleCollider2D>();
+            user4.tag = _tag;
+
+            var user5 = Build(1, 1, 29, 29, _circleSprite);
+            user5.GetComponent<SpriteRenderer>().color = Color.blue;
+            user5.AddComponent<Routing>();
+            user5.AddCollider<CircleCollider2D>();
+            user5.tag = _tag;
+
+            var user6 = Build(1, 1, 28, 28, _circleSprite);
+            user6.GetComponent<SpriteRenderer>().color = Color.blue;
+            user6.AddComponent<Routing>();
+            user6.AddCollider<CircleCollider2D>();
+            user6.tag = _tag;
+
+            var user7 = Build(1, 1, 29, 28, _circleSprite);
+            user7.GetComponent<SpriteRenderer>().color = Color.blue;
+            user7.AddComponent<Routing>();
+            user7.AddCollider<CircleCollider2D>();
+            user7.tag = _tag;
+
+            var user8 = Build(1, 1, 28, 29, _circleSprite);
+            user8.GetComponent<SpriteRenderer>().color = Color.blue;
+            user8.AddComponent<Routing>();
+            user8.AddCollider<CircleCollider2D>();
+            user8.tag = _tag;
+
+            for (int i = 0, fails = 0; i < 20;)
             {
-                float xSize = UnityEngine.Random.Range(1, 7);
-                float ySize = UnityEngine.Random.Range(1, 7);
+                float xSize = UnityEngine.Random.Range(3, 7);
+                float ySize = UnityEngine.Random.Range(3, 7);
                 float xCord = UnityEngine.Random.Range(1, 30 - (int)xSize);
                 float yCord = UnityEngine.Random.Range(1, 30 - (int)ySize);
                 if (IsValid(xSize, ySize, xCord, yCord) && IsFreeSpace(xSize, ySize, xCord, yCord))
                 {
-                    Build(xSize, ySize, xCord, yCord, true);
+                    var go = Build(xSize, ySize, xCord, yCord, _nineSlicedSprite);
+                    go.AddToGrid(xSize, ySize, xCord, yCord);
+                    go.AddCollider<BoxCollider2D>();
                     i++;
                     fails = 0;
                 }
@@ -48,30 +100,43 @@ namespace Assets.Scripts
                     }
                 }
             }
-
-            //Build(7, 2, 3, 14, true);
-            //Build(3, 4, 10, 10, true);
         }
 
-        public static GameObject Build(float xSize, float ySize, float xCord, float yCord, bool addToGrid = false)
+        public static GameObject Build(float xSize, float ySize, float xCord, float yCord, string spriteName)
         {
             GameObject go = new GameObject();
             go.name = Guid.NewGuid().ToString();
             go.transform.position = new Vector2(xCord + xSize / 2, yCord + ySize / 2);
             go.transform.localScale = new Vector2(xSize, ySize);
+            var rigidBody = go.AddComponent<Rigidbody2D>();
+            rigidBody.gravityScale = 0f;
             var sprite = go.AddComponent<SpriteRenderer>();
-            sprite.sprite = Resources.Load<Sprite>("Square");
-            if (addToGrid)
+            sprite.sprite = Resources.Load<Sprite>(spriteName);
+            return go;
+        }
+
+        public static void AddToGrid(this GameObject go, float xSize, float ySize, float xCord, float yCord)
+        {
+            var rigidBody = go.GetComponent<Rigidbody2D>();
+            if (rigidBody != null)
             {
-                for (int i = (int)xCord; i < xCord + xSize; i++)
+                rigidBody.isKinematic = true;
+            }
+
+            for (int i = (int)xCord; i < xCord + xSize; i++)
+            {
+                for (int j = (int)yCord; j < yCord + ySize; j++)
                 {
-                    for (int j = (int)yCord; j < yCord + ySize; j++)
-                    {
-                        grid[i, j] = false;
-                    }
+                    grid[i, j] = false;
                 }
             }
-            return go;
+        }
+        public static void AddCollider<T>(this GameObject go) where T : Collider2D
+        {
+            var collider = go.AddComponent<T>();
+            var material = new PhysicsMaterial2D();
+            material.friction = 0f;
+            collider.sharedMaterial = material;
         }
 
         public static bool IsValid(float xSize, float ySize, float xCord, float yCord)
@@ -87,11 +152,11 @@ namespace Assets.Scripts
 
         public static bool IsFreeSpace(float xSize, float ySize, float xCord, float yCord)
         {
-            for (int i = (int)xCord; i < xCord + xSize; i++)
+            for (int i = (int)xCord - _builingPadding; i < xCord + xSize + _builingPadding; i++)
             {
-                for (int j = (int)yCord; j < yCord + ySize; j++)
+                for (int j = (int)yCord - _builingPadding; j < yCord + ySize + _builingPadding; j++)
                 {
-                    if (!grid[i, j])
+                    if (i < 0 || j < 0 || i >= _maxX || j >= _maxY || !grid[i, j])
                     {
                         return false;
                     }
@@ -146,7 +211,7 @@ namespace Assets.Scripts
                 path.Push(node);
                 node = parent[node.x, node.y];
             }
-            path.Push(start);
+            //path.Push(start);
             //path.Reverse();
             return path;
         }
